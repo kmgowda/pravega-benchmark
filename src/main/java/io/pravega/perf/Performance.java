@@ -14,5 +14,5 @@ import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 public interface Performance {
-    void benchmark() throws InterruptedException, ExecutionException, IOException;
+    void benchmark() throws InterruptedException, IOException;
 }

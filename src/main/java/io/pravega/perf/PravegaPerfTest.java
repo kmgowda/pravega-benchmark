@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  */
 
 package io.pravega.perf;
@@ -40,7 +40,7 @@ import java.util.stream.IntStream;
  * Data format is in comma separated format as following: {TimeStamp, Sensor Id, Location, TempValue }.
  */
 public class PravegaPerfTest {
-
+    private static final int maxTime = 60 * 60 * 24;
     private static String controllerUri = "tcp://localhost:9090";
     private static int messageSize = 100;
     private static String streamName = StartLocalService.STREAM_NAME;
@@ -90,8 +90,13 @@ public class PravegaPerfTest {
             recreate = true;
         }
 
-        if (events == 0 && throughput == 0) {
-            throughput = -1;
+        if (events == 0) {
+            if (throughput == 0) {
+                throughput = -1;
+            }
+            if (runtimeSec == 0) {
+                runtimeSec = maxTime;
+            }
         }
 
         bgexecutor = Executors.newScheduledThreadPool(10);

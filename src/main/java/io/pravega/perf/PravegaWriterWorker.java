@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  */
 
 package io.pravega.perf;
@@ -45,13 +45,9 @@ public class PravegaWriterWorker extends WriterWorker {
         CompletableFuture ret;
         final long time = System.currentTimeMillis();
         ret = producer.writeEvent(data);
-        if (ret == null) {
-            record.accept(time, System.currentTimeMillis(), messageSize);
-        } else {
-            ret.thenAccept(d -> {
-                record.accept(time, System.currentTimeMillis(), messageSize);
-            });
-        }
+        ret.thenAccept(d -> {
+            record.accept(time, System.currentTimeMillis(), data.length());
+        });
         return time;
     }
 

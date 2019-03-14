@@ -18,6 +18,7 @@ import java.util.concurrent.ExecutionException;
  * abstract class for Readers.
  */
 public abstract class ReaderWorker extends Worker implements Callable<Void> {
+    final private static int MS_PER_SEC = 1000;
     final private Performance perf;
 
     ReaderWorker(int readerId, int events, int secondsToRun, long start,
@@ -85,11 +86,13 @@ public abstract class ReaderWorker extends Worker implements Callable<Void> {
 
     private class EventsTimeReader implements Performance {
         public void benchmark() throws IOException {
+            final long msToRun = secondsToRun * MS_PER_SEC;
             String ret = null;
             long time = System.currentTimeMillis();
+
             try {
 
-                while (((time - StartTime) / 1000) < secondsToRun) {
+                while ((time - StartTime)  < msToRun) {
                     time = System.currentTimeMillis();
                     ret = readData();
                     if (ret != null) {
@@ -104,11 +107,11 @@ public abstract class ReaderWorker extends Worker implements Callable<Void> {
 
     private class EventsTimeReaderRW implements Performance {
         public void benchmark() throws IOException {
+            final long msToRun = secondsToRun * MS_PER_SEC;
             String ret = null;
             long time = System.currentTimeMillis();
             try {
-
-                while (((time - StartTime) / 1000) < secondsToRun) {
+                while ((time - StartTime) < msToRun) {
                     ret = readData();
                     if (ret != null) {
                         time = System.currentTimeMillis();

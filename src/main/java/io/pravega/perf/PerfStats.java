@@ -233,7 +233,7 @@ public class PerfStats {
                 }
                 csvParser.close();
             } catch (IOException ex) {
-                ex.printStackTrace();
+                throw new RuntimeException(ex);
             }
         }
 
@@ -242,7 +242,7 @@ public class PerfStats {
             try {
                 csvPrinter.printRecord(start, bytes, latency);
             } catch (IOException ex) {
-                ex.printStackTrace();
+                throw new RuntimeException(ex);
             }
         }
 
@@ -251,7 +251,7 @@ public class PerfStats {
             try {
                 csvPrinter.close();
             } catch (IOException ex) {
-                ex.printStackTrace();
+                throw new RuntimeException(ex);
             }
             readCSV();
             super.printTotal(endTime);
@@ -283,7 +283,7 @@ public class PerfStats {
                     }
                     print();
                 } catch (IOException ex) {
-                    ex.printStackTrace();
+                    throw new RuntimeException(ex);
                 }
             }
         }
@@ -312,7 +312,7 @@ public class PerfStats {
      *
      * @param startTime start time time
      */
-    public void start(long startTime) throws IOException {
+    public synchronized void start(long startTime) throws IOException {
         this.latencyRecorder = csvFile == null ? new LatencyWriter(action, messageSize, startTime) :
                 new CSVLatencyWriter(action, messageSize, startTime, csvFile);
         this.window = new TimeWindow(startTime);
@@ -325,7 +325,7 @@ public class PerfStats {
      *
      * @param endTime End time
      */
-    public void shutdown(long endTime) {
+    public synchronized void shutdown(long endTime) {
         executor.shutdownNow();
         queue.clear();
         latencyRecorder.printTotal(endTime);
