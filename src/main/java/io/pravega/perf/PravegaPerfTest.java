@@ -373,7 +373,7 @@ public class PravegaPerfTest {
         final PravegaStreamHandler streamHandle;
         final ClientFactory factory;
         final ReaderGroup readerGroup;
-        final String readerGrp = new String(streamName + new Random().nextLong());
+        final String readerGrp = streamName + new Random().nextLong();
 
 
         PravegaTest(long startTime, CommandLine commandline) throws
@@ -443,7 +443,7 @@ public class PravegaPerfTest {
                         .boxed()
                         .map(i -> new PravegaReaderWorker(i, eventsPerConsumer,
                                 runtimeSec, startTime, consumeStats,
-                                streamName, TIMEOUT, writeAndRead, factory))
+                                readerGrp, TIMEOUT, writeAndRead, factory))
                         .collect(Collectors.toList());
             } else {
                 readers = null;
