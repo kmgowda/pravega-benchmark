@@ -29,6 +29,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.ParseException;
 
 import java.net.URI;
+import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.IntStream;
@@ -372,6 +373,8 @@ public class PravegaPerfTest {
         final PravegaStreamHandler streamHandle;
         final ClientFactory factory;
         final ReaderGroup readerGroup;
+        final String readerGrp = new String(streamName + new Random().nextLong());
+
 
         PravegaTest(long startTime, CommandLine commandline) throws
                 IllegalArgumentException, URISyntaxException, InterruptedException, Exception {
@@ -395,7 +398,7 @@ public class PravegaPerfTest {
                 }
             }
             if (consumerCount > 0) {
-                readerGroup = streamHandle.createReaderGroup(!writeAndRead);
+                readerGroup = streamHandle.createReaderGroup(!writeAndRead, readerGrp);
             } else {
                 readerGroup = null;
             }
