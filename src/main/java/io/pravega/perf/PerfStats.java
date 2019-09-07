@@ -40,6 +40,8 @@ public class PerfStats {
     final private int windowInterval;
     final private ConcurrentLinkedQueue<TimeStamp> queue;
     final private ExecutorService executor;
+    private TimeWindow window;
+    private LatencyWriter latencyRecorder;
 
     @GuardedBy("this")
     private Future<Void> ret;
@@ -75,6 +77,7 @@ public class PerfStats {
         this.executor = executor;
         this.queue = new ConcurrentLinkedQueue<>();
         this.ret = null;
+        this.window = null;
     }
 
     /**
@@ -335,10 +338,10 @@ public class PerfStats {
      *
      * @param startTime start time time
      */
-    public synchronized void start(long startTime) {
-        if (this.ret == null) {
-            this.ret = executor.submit(new QueueProcessor(startTime));
-        }
+    public synchronized void start(long startTime) throws IOException {
+        this.window = new TimeWindow(action, startTime);
+        this.latencyRecorder = csvFile == null ? new LatencyWriter(action, messageSize, startTime) :
+                new CSVLatencyWriter(action, messageSize, startTime, csvFile);
     }
 
     /**
@@ -349,12 +352,9 @@ public class PerfStats {
      * @throws InterruptedException If an exception occurred.
      */
     public synchronized void shutdown(long endTime) throws ExecutionException, InterruptedException {
-        if (this.ret != null) {
-            queue.add(new TimeStamp(endTime));
-            ret.get();
-            executor.shutdownNow();
-            queue.clear();
-            this.ret = null;
+        if (this.window != null) {
+            latencyRecorder.printTotal(endTime);
+            this.window = null;
         }
     }
 
@@ -366,6 +366,12 @@ public class PerfStats {
      * @param bytes     number of bytes written or read
      **/
     public void recordTime(long startTime, long endTime, int bytes) {
-        queue.add(new TimeStamp(startTime, endTime, bytes));
+        final int latency = (int) (endTime - startTime);
+        window.record(bytes, latency);
+        latencyRecorder.record(startTime, bytes, latency);
+        if (window.windowTimeMS(endTime) > windowInterval) {
+            window.print(endTime);
+            window.reset(endTime);
+        }       
     }
 }
