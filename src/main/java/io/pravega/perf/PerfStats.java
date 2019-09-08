@@ -11,11 +11,7 @@ package io.pravega.perf;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.LockSupport;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -37,7 +33,7 @@ public class PerfStats {
     final private String csvFile;
     final private int messageSize;
     final private int windowInterval;
-    final private ConcurrentLinkedQueue<TimeStamp> queue;
+    final private LinkedBlockingQueue<TimeStamp> queue;
     final private ExecutorService executor;
 
     @GuardedBy("this")
@@ -72,7 +68,7 @@ public class PerfStats {
         this.windowInterval = reportingInterval;
         this.csvFile = csvFile;
         this.executor = executor;
-        this.queue = new ConcurrentLinkedQueue<>();
+        this.queue = new LinkedBlockingQueue<>();
         this.ret = null;
     }
 
@@ -90,7 +86,7 @@ public class PerfStats {
             this.startTime = startTime;
         }
 
-        public Void call() throws IOException {
+        public Void call() throws IOException, InterruptedException {
             final TimeWindow window = new TimeWindow(action, startTime);
             final LatencyWriter latencyRecorder = csvFile == null ? new LatencyWriter(action, messageSize, startTime) :
                     new CSVLatencyWriter(action, messageSize, startTime, csvFile);
@@ -102,7 +98,7 @@ public class PerfStats {
             TimeStamp t;
 
             while (doWork) {
-                t = queue.poll();
+                t = queue.poll(windowInterval, TimeUnit.MILLISECONDS);
                 if (t != null) {
                     if (t.isEnd()) {
                         doWork = false;
