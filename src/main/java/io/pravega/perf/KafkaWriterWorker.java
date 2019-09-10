@@ -13,6 +13,8 @@ import java.util.Properties;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.Callback;
+import org.apache.kafka.clients.producer.RecordMetadata;
 
 /**
  * Class for Kafka writer/producer.
@@ -34,11 +36,26 @@ public class KafkaWriterWorker extends WriterWorker {
 
     public long recordWrite(byte[] data, TriConsumer record) {
         final long time = System.currentTimeMillis();
-        producer.send(new ProducerRecord<>(streamName, data), (metadata, exception) -> {
-            final long endTime = System.currentTimeMillis();
-            record.accept(time, endTime, data.length);
-        });
+        Callback cb = new PerfCallback(time, data.length, record);
+        producer.send(new ProducerRecord<>(streamName, data), cb);
         return time;
+    }
+
+    private static final class PerfCallback implements Callback {
+        private final long start;
+        private final int bytes;
+        private final TriConsumer record;
+
+        public PerfCallback(long start, int bytes, TriConsumer record) {
+            this.start = start;
+            this.bytes = bytes;
+            this.record = record;
+        }
+
+        public void onCompletion(RecordMetadata metadata, Exception exception) {
+            final long endTime = System.currentTimeMillis();
+            record.accept(start, endTime, bytes);
+        }
     }
 
     @Override
