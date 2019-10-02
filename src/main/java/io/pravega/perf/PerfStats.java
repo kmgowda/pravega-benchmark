@@ -10,6 +10,7 @@
 package io.pravega.perf;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
@@ -120,7 +121,7 @@ public class PerfStats {
                     LockSupport.parkNanos(PARK_NS);
                     idleCount++;
                     if (idleCount > totalIdleCount) {
-                        time = System.currentTimeMillis();
+                        time = Instant.now().toEpochMilli();
                         idleCount = 0;
                         if (window.windowTimeMS(time) > windowInterval) {
                             window.print(time);
