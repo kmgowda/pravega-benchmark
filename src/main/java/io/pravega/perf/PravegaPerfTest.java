@@ -35,6 +35,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.ParseException;
 
 import java.net.URI;
+import java.time.Instant;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.IntStream;
@@ -62,7 +63,7 @@ public class PravegaPerfTest {
         final CommandLineParser parser;
         CommandLine commandline = null;
         Option opt = null;
-        final long startTime = System.currentTimeMillis();
+        final long startTime = Instant.now().toEpochMilli();
 
         options.addOption("controller", true, "Controller URI");
         options.addOption("scope", true, "Scope name");
@@ -130,7 +131,7 @@ public class PravegaPerfTest {
                         System.out.println();
                         executor.shutdown();
                         executor.awaitTermination(1, TimeUnit.SECONDS);
-                        perfTest.shutdown(System.currentTimeMillis());
+                        perfTest.shutdown(Instant.now().toEpochMilli());
                         if (consumers != null) {
                             consumers.forEach(ReaderWorker::close);
                         }
@@ -143,11 +144,11 @@ public class PravegaPerfTest {
                     }
                 }
             });
-            perfTest.start(System.currentTimeMillis());
+            perfTest.start(Instant.now().toEpochMilli());
             executor.invokeAll(workers);
             executor.shutdown();
             executor.awaitTermination(1, TimeUnit.SECONDS);
-            perfTest.shutdown(System.currentTimeMillis());
+            perfTest.shutdown(Instant.now().toEpochMilli());
             if (consumers != null) {
                 consumers.forEach(ReaderWorker::close);
             }
